@@ -8,7 +8,7 @@ const app = express();
 app.use(express.json());
 app.use('/grades', route);
 
-app.listen(8080, async () => {
+app.listen(process.env.PORT || 3000, async () => {
   try {
     await readFile(global.dataGrade);
     console.log('API STARTED');
