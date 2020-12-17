@@ -1,6 +1,7 @@
 import express from 'express';
 import winston from 'winston';
 import route from './route/grade.js';
+import cors from 'cors';
 import { promises as fs } from 'fs';
 
 const { readFile, writeFile } = fs;
@@ -25,6 +26,7 @@ global.logger = winston.createLogger({
 });
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 app.use('/grades', route);
 
