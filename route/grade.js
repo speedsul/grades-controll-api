@@ -7,17 +7,28 @@ const route = express.Router();
 
 route.get('/', async (req, res) => {
   const data = JSON.parse(await readFile(global.dataGrade));
-  console.log(data.grades);
+  console.log('Listar rodos clientes');
   res.send(data.grades);
 });
 route.post('/', async (req, res, next) => {
   try {
     let grade = req.body;
+    if (
+      !grade.student ||
+      !grade.subject ||
+      !grade.type ||
+      grade.value == null
+    ) {
+      throw new Error('Favor preencha todos os campos');
+    }
 
     const dataRead = JSON.parse(await readFile(global.dataGrade));
     grade.grades = {
       id: dataRead.nextId++,
-      ...grade,
+      student: grade.student,
+      subject: grade.subject,
+      type: grade.type,
+      value: grade.value,
       timestamp: dateTime,
     };
     dataRead.grades.push(grade.grades);
@@ -34,8 +45,14 @@ route.put('/', async (req, res, next) => {
 
     const data = JSON.parse(await readFile(global.dataGrade));
     const index = data.grades.findIndex((i) => i.id === id);
-    data.grades[index] = grade;
-    await writeFile(global.dataGrade, JSON.stringify(data, null, 2));
+    if (index === -1) {
+      throw new Error(`Registro' ${id} ' não emcontrado`);
+    }
+    (data.grades[index].student = grade.student),
+      (data.grades[index].subject = grade.subject),
+      (data.grades[index].type = grade.type),
+      (data.grades[index].value = grade.value),
+      await writeFile(global.dataGrade, JSON.stringify(data, null, 2));
     res.send({ message: 'Grade atualizado com sucesso' });
   } catch (err) {
     next(err);
@@ -48,7 +65,7 @@ route.delete('/:id', async (req, res, next) => {
     const dataFind = data.grades.filter((i) => i.id !== id);
     let dataSave = [];
     dataSave = { grades: dataFind };
-    console.log(dataSave);
+    logger.info(`Grade deletada: ${id}`);
     await writeFile(global.dataGrade, JSON.stringify(dataSave, null, 2));
     res.send({ message: 'Grade deletada com sucesso' });
   } catch (err) {
@@ -117,7 +134,7 @@ route.get('/type/:type/:subject', async (req, res, next) => {
   }
 });
 route.use((err, req, res, next) => {
-  console.log(err);
+  logger.error(err);
   res.status(400).send({ error: err.message });
 });
 
